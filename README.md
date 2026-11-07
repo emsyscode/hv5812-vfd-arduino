@@ -113,13 +113,5 @@ Do not write to the same AVR ports from interrupt handlers.
 After editing shared headers in `libraries/Hv5812Vfd/src`,
 run `python tools/sync_headers.py` and `python tools/sync_headers.py --check`.
 
-## Troubleshooting
-
-- **Dark:** check supplies, filament, BLANK LOW, full words and STROBE; try RawGrid.
-- **Wrong cell or mirrored glyph:** correct grid, column or bit mapping.
-- **Flicker:** shorten hold time and avoid blocking the scan.
-- **Dim sparse text:** use active scanning instead of waiting on empty cells.
-- **Ghosting:** check grid clearing, filament reference and panel wiring.
-
 [HV5812 datasheet: Microchip DS20005629A](https://ww1.microchip.com/downloads/en/DeviceDoc/20005629A.pdf).
 Verify the exact UCN5812 variant's pinout and ratings before substitution.
