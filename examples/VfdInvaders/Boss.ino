@@ -1,5 +1,4 @@
-// Boss is a bonus encounter after each third formation; it shares bullets,
-// damage allowance and pause handling with the game, not a second game loop.
+// Boss encounters share the game's bullets, damage allowance and pause handling.
 void beginBoss(uint32_t now) {
     clearShots();game.alive=game.secondRowAlive=0;
     game.bossActive=true;
@@ -55,7 +54,7 @@ void bossAttack(uint32_t now) {
         game.bombs[b].x=game.bossX+(b?8:2);
         game.bombs[b].y=game.bossY+7;
         const int target=game.playerX+shipWidth()/2;
-        // Straight vents, aimed diagonals, then an outward two-shot fan.
+        // Patterns: straight shots, aimed diagonals, outward two-shot fan.
         bombDx[b]=game.bossPattern==0?0:game.bossPattern==2?(b?1:-1):
             target>game.bombs[b].x?1:target<game.bombs[b].x?-1:0;
         frameDirty=true;

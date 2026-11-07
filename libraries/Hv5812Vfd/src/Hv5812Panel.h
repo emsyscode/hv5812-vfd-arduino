@@ -33,7 +33,7 @@ public:
         if (enabled_) {
             delayMicroseconds(holdUs_);
         }
-        clearGrids(); // Return with no grid selected; D10 stays LOW.
+        clearGrids();
         lastOnUs_ = enabled_ && slot < 40 ? micros() - started : 0;
     }
 private:

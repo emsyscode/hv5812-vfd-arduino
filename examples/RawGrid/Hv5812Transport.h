@@ -3,8 +3,8 @@
 #include <Arduino.h>
 #include "Hv5812Board.h"
 
-// Cache AVR port addresses so multiplex refresh does not pay digitalWrite's
-// pin lookup overhead on every clock edge. Other boards use the Arduino API.
+// Direct AVR port access reduces clock-edge overhead.
+// Other boards use digitalWrite().
 class Hv5812Pin {
 public:
     explicit Hv5812Pin(uint8_t pin) : pin_(pin) {}

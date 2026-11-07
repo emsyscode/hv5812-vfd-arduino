@@ -1,6 +1,6 @@
 void beep(uint16_t duration) {
     if (!soundEnabled) return;
-    digitalWrite(BuzzerPin, HIGH); // Active buzzer: its driver supplies the pitch.
+    digitalWrite(BuzzerPin, HIGH); // Active buzzer generates its own tone.
     buzzerAt = millis();
     buzzerMs = duration;
 }

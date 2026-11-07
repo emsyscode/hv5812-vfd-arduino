@@ -60,7 +60,7 @@ void movePlayer(int8_t dx) {
     if (game.phase != PLAYING) return;
     const int x = game.playerX + dx;
     game.playerX = constrain(x, 0, 100 - shipWidth());
-    game.playerY = 14 - shipHeight(); // Horizontal-only control in both sizes.
+    game.playerY = 14 - shipHeight(); // Place the ship at the bottom edge.
     frameDirty = true;
 }
 

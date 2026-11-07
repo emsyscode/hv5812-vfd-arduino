@@ -46,7 +46,7 @@ void setup() {
     pinMode(FirePin, INPUT_PULLUP);
     pinMode(XPin, INPUT);
     pinMode(YPin, INPUT);
-    panel.begin(); // BLANK HIGH during setup/~50 ms, then LOW for the whole run.
+    panel.begin();
     panel.setHoldUs(holdUs);
     panel.enable(true);
     Serial.begin(115200);

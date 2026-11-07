@@ -11,7 +11,7 @@ void drawSprite(int x, int y, const uint8_t *rows, uint8_t height) {
     }
 }
 
-// Text/HUD uses complete character cells; actors still use the pixel canvas.
+// Align text to character cells; draw actors on the pixel canvas.
 void drawCellText(uint8_t row, uint8_t column, const char *text) {
     if (row >= 2) return;
     while (*text && column < 20) {
