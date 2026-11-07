@@ -1,40 +1,11 @@
-# HV5812 / UCN5812 VFD control with Arduino
+# HV5812 / UCN5812 VFD with Arduino
 
-Control a 2x20-character vacuum fluorescent display using four serial
-drivers and an Arduino Uno. Each character has a 5x7 dot matrix. Examples cover
-raw grid selection, ASCII text and an optional Space Invaders-style game.
+Drive a 2x20-character VFD with four serial drivers and an Arduino Uno.
+Each cell contains 5x7 dots. Start with one character, then text; the game is optional.
 
-## How the drivers work
+## Connect the panel
 
-The HV5812 has a 20-bit shift register, output latches and 20 high-voltage
-outputs. Connect **DATA OUT** to the next chip's **DATA IN** to cascade chips;
-share their CLOCK, STROBE and BLANK signals. A two-chip chain needs 40 clock
-pulses for a complete output pattern. Data enters on CLOCK's rising edge.
-STROBE transfers the shift-register contents to the outputs; shifting while
-STROBE is low leaves the displayed pattern unchanged.
-
-This panel has two separate chains:
-
-```text
-D7 DATA  -> grid driver 1 -> grid driver 2     D8 CLOCK
-D4 DATA  -> dot driver 1  -> dot driver 2      D5 CLOCK
-              all four: D9 STROBE, D10 BLANK
-```
-
-To light one character, send a 40-bit grid word with one selected bit and a
-40-bit dot word, then pulse the shared STROBE. Hold the grid briefly, shift
-40 zero grid bits and latch again to turn it off. Repeat for the other cells.
-The default hold is 150 microseconds. BLANK starts HIGH for initialization,
-then stays LOW; runtime blanking is done with zero grid data.
-
-Skipping empty cells saves display time, not serial bits. Every transmitted
-word still contains all 40 bits. With a full display, active and all-cell scans
-visit the same 40 positions. Hold time is per grid, not the screen refresh rate;
-long holds produce a visible sweep, while short holds reduce duty cycle.
-
-## Wiring
-
-| Uno pin | Panel signal |
+| Uno | Signal |
 | --- | --- |
 | D4 | Dot-chain DATA IN |
 | D5 | Dot-chain CLOCK |
@@ -44,39 +15,40 @@ long holds produce a visible sweep, while short holds reduce duty cycle.
 | D10 | Shared BLANK |
 | GND | Logic and driver ground |
 
-D6 is unused. These are signal connections, not physical IC pin numbers.
-Check the package pinout and trace the panel connections before wiring.
+D6 is unused. These are signal connections, not IC pin numbers.
+Check the chip package and trace the panel connections before wiring.
 
-The HV5812 uses 4.5–5.5 V logic and a separate 20–80 V high-voltage rail.
-These are driver operating ranges, not a panel or filament specification.
-Do not connect the high-voltage rail to Arduino pins. A 3.3 V controller needs
-a compatible logic interface; the examples target the 5 V Uno.
+```text
+D7 DATA -> grid driver 1 -> grid driver 2    D8 CLOCK
+D4 DATA -> dot driver 1  -> dot driver 2     D5 CLOCK
+             all four: D9 STROBE, D10 BLANK
+```
 
-Power-up order: ground, logic supply, defined input levels, then high voltage;
-power down in reverse. Do not let VPP float or fall below VDD during operation.
-Keep BLANK HIGH in hardware during reset: firmware cannot control floating
-inputs before setup runs or enforce external power sequencing.
+The HV5812 requires 4.5–5.5 V logic and a separate 20–80 V VPP rail.
+These are driver limits: use the panel's own anode/grid and filament ratings.
+Never connect VPP to Arduino pins. Other boards require logic-level and timing checks.
 
-The panel supply uses three isolated B0524S 5-to-24 V converters: common 5 V
-inputs, isolated outputs connected in series for nominal 72 V. Series stacking
-requires isolated outputs: the bottom negative terminal connects to driver ground,
-and the top positive terminal supplies VPP. The filament has a separate 2x2.2 V AC transformer,
-with its centre tap tied to +5 V DC. Supply ratings, loading and insulation must
-suit the panel; this connection summary is not a complete power-supply schematic.
+Power up in this order: ground, VDD, defined logic inputs, then VPP; reverse
+the order for shutdown. VPP must not float or fall below VDD during operation.
+Hold BLANK HIGH in hardware during reset; firmware cannot enforce supply sequencing.
 
-## Run an example
+This panel uses three isolated B0524S converters with common 5 V inputs and
+series-connected 24 V outputs: nominal 72 V. Connect the bottom negative
+terminal to driver ground and the top positive terminal to VPP. Only isolated
+outputs can be stacked this way. The separate filament supply is 2x2.2 V AC,
+with the transformer's centre tap tied to +5 V DC. Match supply ratings and
+loading to the tube; this is a connection summary, not a complete supply schematic.
 
-Download the repository and open one complete example folder in Arduino IDE.
-Select **Arduino Uno** and upload. Required headers are already beside each
-sketch; no custom library installation is needed.
+## Upload and test
 
-1. [RawGrid](examples/RawGrid/RawGrid.ino): displays A in the top-left cell.
-   Change the logical row/column or five column bytes to check the mapping.
-2. [TextDisplay](examples/TextDisplay/TextDisplay.ino): displays two lines and
-   accepts commands at **115200 baud**, with Newline or Both NL & CR selected.
+Keep each example folder intact. Open its main `.ino` in Arduino IDE, select
+**Arduino Uno** and upload. Required headers are included; no library installation is needed.
+
+1. [RawGrid](examples/RawGrid/RawGrid.ino): A in the top-left cell.
+2. [TextDisplay](examples/TextDisplay/TextDisplay.ino): two lines, controlled through Serial Monitor.
 3. [VfdInvaders](examples/VfdInvaders/README.md): optional joystick game.
 
-Text commands:
+For TextDisplay, select **115200 baud** and **Newline** or **Both NL & CR**:
 
 ```text
 row1 HELLO VFD
@@ -87,57 +59,68 @@ clear
 ?
 ```
 
-`hold` accepts 100–10000 microseconds; `scan all` also visits empty cells.
-Each row accepts up to 20 printable ASCII characters. Call `refresh()` frequently:
-it sends one grid pulse per call. Long blocking operations interrupt the scan.
-Single-cell examples insert a 5 ms dark interval to limit duty cycle.
+Each row accepts up to 20 printable ASCII characters. `hold` sets the per-grid
+on-time (100–10000 microseconds); `scan all` also visits empty cells.
 
-## Adapt the mapping
+## How control works
 
-`Hv5812Board.h` defines the signal pins and `GridSlot[2][20]`. Entries are serial
-bit positions, not numbered IC output pins. This panel's top row maps to slots
-39..20, and its bottom row to 19..0, both left to right.
+Each HV5812 has a 20-bit shift register, output latches and 20 high-voltage
+outputs. Connect DATA OUT to the next chip's DATA IN; share CLOCK, STROBE and
+BLANK within a chain. Data shifts on CLOCK's rising edge. Keep STROBE LOW while
+shifting, then pulse it HIGH to update the outputs. BLANK HIGH disables output;
+LOW permits the latched pattern.
 
-Each cell uses five bytes, transmitted left to right, least-significant bit
-first. Within a column, **bit 7 is the top dot and bit 1 the bottom dot**.
-Bit 0 is reserved for auxiliary electrodes; it is clear in the font. Dot,
-colon and triangle connections must be mapped separately before using
-`setExtras(row, column, mask)`; mask bits select bit 0 of the five column bytes.
+For this four-driver panel, each character pulse is:
 
-`VfdAscii.h` contains ASCII 32–126. `ascii_5x7_column(character, column)` reads
-one column from flash on AVR. Changing boards or panels requires checking
-pin levels, slot order, column order, polarity and timing.
+1. Send a complete **40-bit grid word**, selecting one grid.
+2. Send a complete **40-bit dot word** through the other chain.
+3. Pulse the shared STROBE and hold the character; the default is **150 us**.
+4. Shift 40 zero grid bits and latch again to turn the character off.
 
-## Driver API
+Repeat across the display. BLANK is HIGH during the 50 ms startup interval,
+then stays LOW. Empty cells can be skipped in display time; transmitted words
+always remain 40 bits. Active scanning is the default. With all cells occupied,
+it visits the same positions as an all-cell scan.
 
-| Call | Action |
+Call `refresh()` frequently: it scans one cell per call. Long holds or blocking
+code produce a visible sweep. A single active cell gets an extra 5 ms dark
+interval in these examples to limit duty cycle.
+
+## Mapping and API
+
+`Hv5812Board.h` contains the pins and `GridSlot[2][20]`: top row 39..20,
+bottom row 19..0, both left to right. Slots mean serial bit positions, not
+IC output pin numbers. This mapping and the fixed 40-bit chains are panel-specific.
+
+Five column bytes describe a character, sent left to right and LSB first.
+**Bit 7 is the top dot; bit 1 is the bottom.** The font leaves bit 0 clear.
+Map auxiliary dot/colon/triangle electrodes separately before using
+`setExtras(row, column, mask)`; mask bits 0..4 select bit 0 of each column.
+`VfdAscii.h` contains ASCII 32–126, stored in AVR flash.
+
+| Call | Purpose |
 | --- | --- |
-| `panel.begin()` | Clear both chains; hold BLANK HIGH for 50 ms, then LOW |
-| `panel.enable(true/false)` | Allow grid pulses or clear grid selection |
-| `panel.setHoldUs(150)` | Set per-grid hold |
-| `panel.setClockHalfPeriodUs(1)` | Set software clock half-period |
-| `panel.scanRaw(slot, columns)` | Pulse slot 0–39, then clear all grids |
-| `display.write(row, column, text)` | Put text into the two-row buffer |
-| `display.refresh()` | Scan one cell; return true at the end of a sweep |
+| `panel.begin()` | Clear both chains and initialize BLANK |
+| `panel.enable(true)` | Enable grid pulses; `false` clears selection |
+| `panel.setHoldUs(150)` | Set grid hold time |
+| `panel.setClockHalfPeriodUs(1)` | Set software clock timing |
+| `panel.scanRaw(slot, columns)` | Pulse slot 0–39, then clear grids |
+| `display.write(row, column, text)` | Write text; rows 0–1, columns 0–19 |
+| `display.resetScan()` | Restart the sweep after changing text or scan mode |
+| `display.refresh()` | Scan one cell; true means a sweep finished |
 
-Call `enable(true)` after initialization. Changing enable state does not toggle
-BLANK. The transport uses cached AVR port writes; do not modify those same port
-bits from an interrupt handler. Other architectures need separate validation.
+Enable the panel after `begin()`. Runtime enable/disable does not change BLANK.
+Do not write to the same AVR ports from interrupt handlers.
+After editing shared headers in `libraries/Hv5812Vfd/src`,
+run `python tools/sync_headers.py` and `python tools/sync_headers.py --check`.
 
-### Troubleshooting
+## Troubleshooting
 
-- **Nothing lights:** check supplies, filament power, BLANK LOW, full words and
-  the shared STROBE; start with RawGrid.
-- **Wrong cell or mirrored text:** correct `GridSlot` or column/bit mapping.
-- **Visible sweep or flicker:** reduce hold time and keep loop work short.
-- **Dim sparse text:** use active scanning; do not add waits for empty cells.
-- **Ghosting:** check that grids clear between pulses, then inspect filament
-  supply/reference and panel wiring; scan timing alone does not diagnose it.
+- **Dark:** check supplies, filament, BLANK LOW, full words and STROBE; try RawGrid.
+- **Wrong cell or mirrored glyph:** correct grid, column or bit mapping.
+- **Flicker:** shorten hold time and avoid blocking the scan.
+- **Dim sparse text:** use active scanning instead of waiting on empty cells.
+- **Ghosting:** check grid clearing, filament reference and panel wiring.
 
-Shared source is in `libraries/Hv5812Vfd/src`. After editing it, run
-`python tools/sync_headers.py`, then `python tools/sync_headers.py --check` to
-update all bundled copies.
-
-HV5812 electrical limits and timing: [Microchip DS20005629A](https://ww1.microchip.com/downloads/en/DeviceDoc/20005629A.pdf).
-For UCN5812 variants, verify the exact part's pinout and electrical ratings
-against its own datasheet before substitution.
+[HV5812 datasheet: Microchip DS20005629A](https://ww1.microchip.com/downloads/en/DeviceDoc/20005629A.pdf).
+Verify the exact UCN5812 variant's pinout and ratings before substitution.
