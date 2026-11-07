@@ -1,16 +1,15 @@
 # Optional VFD game
 
-Open `VfdInvaders.ino` with the entire folder present. Upload to an Arduino Uno.
+Open `VfdInvaders.ino` and upload to an Arduino Uno.
 Display wiring and supplies are described in the [main tutorial](../../README.md).
 
 | Control | Pin |
 | --- | --- |
 | Joystick horizontal output | A0 |
-| Second joystick axis; diagnostic only | A2 |
 | Fire button; normally open to GND | D12, internal pull-up |
 | Active buzzer through a transistor driver | D11; HIGH switches on |
 
-Use a joystick with analog outputs in the Uno's 0–5 V input range and a common
+Use a joystick with an analog horizontal output in the Uno's 0–5 V input range and a common
 ground. Size the buzzer transistor, bias resistor and supply for the actual load;
 do not power the buzzer directly from the GPIO. This is an active buzzer, not a
 passive speaker driven with `tone()`.

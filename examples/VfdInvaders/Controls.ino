@@ -15,7 +15,7 @@ void updateBuzzer(uint32_t now) {
 void beginCalibration() {
     demoMode = false;
     clearShots();
-    calibrationX = calibrationY = 0;
+    calibrationX = 0;
     calibrationSamples = 0;
     stickX = 0;
     setPhase(CALIBRATING, millis());
@@ -32,9 +32,7 @@ int8_t axisDirection(int delta, int8_t previous) {
 void updateInputs(uint32_t now) {
     if (uint32_t(now - lastInput) < 5) return;
     lastInput = now;
-    // Discard the first conversion after switching ADC channels.
-    analogRead(XPin); rawX = analogRead(XPin);
-    analogRead(YPin); rawY = analogRead(YPin);
+    rawX = analogRead(XPin);
     const bool pressedLevel = digitalRead(FirePin);
     if (pressedLevel != fireRaw) { fireRaw = pressedLevel; fireChangedAt = now; }
     if (uint32_t(now - fireChangedAt) >= 30 && fireStable != fireRaw) {
@@ -48,15 +46,13 @@ void updateInputs(uint32_t now) {
     }
     if (fireStable == HIGH) fireArmed = true;
     if (game.phase == CALIBRATING) {
-        calibrationX += rawX; calibrationY += rawY; ++calibrationSamples;
+        calibrationX += rawX; ++calibrationSamples;
         if (uint32_t(now - phaseAt) >= 1000 && calibrationSamples) {
             centreX = filteredX = calibrationX / calibrationSamples;
-            centreY = calibrationY / calibrationSamples;
-            randomSeed(uint32_t(centreX) * 1024 + centreY + micros());
+            randomSeed(uint32_t(centreX) + micros());
             fireArmed = fireStable == HIGH;
             setPhase(READY, now);
-            Serial.print(F("READY centre_x=")); Serial.print(centreX);
-            Serial.print(F(" centre_y=")); Serial.println(centreY);
+            Serial.print(F("READY centre_x=")); Serial.println(centreX);
         }
         return;
     }
@@ -85,7 +81,7 @@ void togglePause() {
 
 void printHelp() {
     Serial.println(F("menu | difficulty easy/normal/hard | size compact/classic | mode waves/rows"));
-    Serial.println(F("FIRE: start / hold to shoot. Joystick: A0=left/right; ship height fixed. A2=diagnostic only."));
+    Serial.println(F("FIRE: start / hold to shoot. Joystick: A0=left/right."));
     Serial.println(F("play | demo (autopilot) | p pause | sprite | status | input | center"));
     Serial.println(F("a/d left/right | f fire | reversex | sound on/off"));
     Serial.println(F("hold/dwell 100..10000 us | scan active/all | ?"));
@@ -124,12 +120,9 @@ void printStatus() {
 
 void printInput() {
     Serial.print(F("INPUT x=")); Serial.print(rawX);
-    Serial.print(F(" y=")); Serial.print(rawY);
     Serial.print(F(" centre_x=")); Serial.print(centreX);
-    Serial.print(F(" centre_y=")); Serial.print(centreY);
     Serial.print(F(" fire=")); Serial.print(fireStable == LOW ? F("DOWN") : F("UP"));
-    Serial.print(F(" reverse_x=")); Serial.print(reverseX);
-    Serial.println(F(" y_control=OFF"));
+    Serial.print(F(" reverse_x=")); Serial.println(reverseX);
 }
 
 void handleCommand(char *line) {

@@ -47,6 +47,8 @@ Open the example's main `.ino` in Arduino IDE, select
 2. [TextDisplay](examples/TextDisplay/TextDisplay.ino): two lines, controlled through Serial Monitor.
 3. [VfdInvaders](examples/VfdInvaders/README.md): optional joystick game.
 
+[JoystickReadout](examples/JoystickReadout/README.md) checks a joystick and button separately, without the display.
+
 For TextDisplay, select **115200 baud** and **Newline** or **Both NL & CR**:
 
 ```text

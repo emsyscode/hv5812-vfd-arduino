@@ -5,7 +5,7 @@
 #include "Sprites.h"
 #include <string.h>
 
-constexpr uint8_t XPin = A0, YPin = A2, FirePin = 12, BuzzerPin = 11;
+constexpr uint8_t XPin = A0, FirePin = 12, BuzzerPin = 11;
 // Increasing X voltage moves left; reversex changes this direction.
 bool reverseX = false;
 constexpr int Engage = 30, Release = 18;
@@ -28,9 +28,9 @@ bool singleCellWaiting = false;
 uint32_t lastDraw = 0, lastInput = 0, lastXMove = 0;
 uint32_t phaseAt = 0, lastEnemyMove = 0, lastShotMove = 0, lastBomb = 0, lastFire = 0;
 uint32_t lastScan = 0, scanPeriodUs = 0, singleCellOffUntil = 0;
-uint32_t calibrationX = 0, calibrationY = 0;
+uint32_t calibrationX = 0;
 uint16_t calibrationSamples = 0;
-int rawX = 0, rawY = 0, centreX = 512, centreY = 512, filteredX = 512;
+int rawX = 0, centreX = 512, filteredX = 512;
 int8_t stickX = 0;
 bool fireRaw = HIGH, fireStable = HIGH, fireArmed = false;
 uint32_t fireChangedAt = 0, buzzerAt = 0;
@@ -45,7 +45,6 @@ void setup() {
     pinMode(BuzzerPin, OUTPUT);
     pinMode(FirePin, INPUT_PULLUP);
     pinMode(XPin, INPUT);
-    pinMode(YPin, INPUT);
     panel.begin();
     panel.setHoldUs(holdUs);
     panel.enable(true);
