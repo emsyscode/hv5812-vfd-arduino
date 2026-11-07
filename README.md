@@ -108,10 +108,15 @@ Map auxiliary dot/colon/triangle electrodes separately before using
 | `display.resetScan()` | Restart the sweep after changing text or scan mode |
 | `display.refresh()` | Scan one cell; true means a sweep finished |
 
-Enable the panel after `begin()`. Runtime enable/disable does not change BLANK.
-Do not write to the same AVR ports from interrupt handlers.
-After editing shared headers in `libraries/Hv5812Vfd/src`,
-run `python tools/sync_headers.py` and `python tools/sync_headers.py --check`.
+Start the display in `setup()`:
+
+```cpp
+display.begin();
+display.enable(true);
+display.write(0, 0, "HELLO VFD");
+```
+
+Call `display.refresh()` in `loop()` to keep the text visible.
 
 [HV5812 datasheet: Microchip DS20005629A](https://ww1.microchip.com/downloads/en/DeviceDoc/20005629A.pdf).
 Verify the exact UCN5812 variant's pinout and ratings before substitution.
