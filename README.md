@@ -40,7 +40,7 @@ with the transformer's centre tap tied to +5 V DC. Choose supplies that match th
 
 ## Upload and test
 
-Keep each example folder intact. Open its main `.ino` in Arduino IDE, select
+Open the example's main `.ino` in Arduino IDE, select
 **Arduino Uno** and upload. Required headers are included; no library installation is needed.
 
 1. [RawGrid](examples/RawGrid/RawGrid.ino): A in the top-left cell.
