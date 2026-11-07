@@ -32,8 +32,8 @@ Power up in this order: ground, VDD, defined logic inputs, then VPP; reverse
 the order for shutdown. VPP must not float or fall below VDD during operation.
 Keep BLANK HIGH during reset with an external pull-up resistor.
 
-This panel uses three isolated B0524S converters with common 5 V inputs and
-series-connected 24 V outputs: nominal 72 V. Connect the bottom negative
+To supply the VFD, this build uses three isolated B0524S converters with
+common 5 V inputs and series-connected 24 V outputs, providing nominal 72 V. Connect the bottom negative
 terminal to driver ground and the top positive terminal to VPP. Only isolated
 outputs can be stacked this way. The separate filament supply is 2x2.2 V AC,
 with the transformer's centre tap tied to +5 V DC. Choose supplies that match the tube's voltage and current requirements.
